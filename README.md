@@ -15,5 +15,7 @@
 |Разбираем аллокатор GO по полочкам                                                 |        |https://avito.tech/tpost/r4n35s1v61-go-to-memory-razbiraem-allokator-go-po-p|
 |Потребление оперативной памяти в  GO                                                 |        |https://www.youtube.com/watch?v=_BbhmaZupqs|
 |GopherCon UK 2018: Andre Carvalho - Understanding Go's Memory Allocator||https://www.youtube.com/watch?v=3CR4UNMK_Is|
+|The Golang Scheduler||https://www.kelche.co/blog/go/golang-scheduling/|
+
 
 
