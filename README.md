@@ -16,6 +16,8 @@
 |Потребление оперативной памяти в  GO                                                 |        |https://www.youtube.com/watch?v=_BbhmaZupqs|
 |GopherCon UK 2018: Andre Carvalho - Understanding Go's Memory Allocator||https://www.youtube.com/watch?v=3CR4UNMK_Is|
 |The Golang Scheduler||https://www.kelche.co/blog/go/golang-scheduling/|
+|Теория отказоустойчивых систем|Курс|https://www.lektorium.tv/node/36432|
+|Теория отказоустойчивых систем|Курс|https://www.youtube.com/playlist?list=PL4_hYwCyhAvYaxubHPI-qZDhqPckxxvK7|
 
 
 
