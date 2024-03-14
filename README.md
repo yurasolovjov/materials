@@ -6,6 +6,7 @@
 | Linux namespaces                                | Статья |https://habr.com/ru/post/458462/|
 | CGroup linux                                    | Статья |https://habr.com/ru/company/selectel/blog/303190/|
 | Описание работы планировщика go                 | Статья |https://habr.com/ru/articles/502506/|
+|Описание работы планировщика go||https://github.com/golang/go/blob/master/src/runtime/HACKING.md|
 | Планировщик ОС                                  | Статья |https://www.geeksforgeeks.org/cpu-scheduling-in-operating-systems/|
 | CPU-лимиты и агрессивный троттлинг в Kubernetes | Статья |https://habr.com/ru/companies/flant/articles/489668/|
 | Описание TLS                                    | Статья |https://tls12.xargs.org/|
