@@ -15,6 +15,7 @@
 |Устройство каналов в GO                                                 |        |https://www.youtube.com/watch?v=8NhcDt1BCmc|
 |Разбираем аллокатор GO по полочкам                                                 |        |https://avito.tech/tpost/r4n35s1v61-go-to-memory-razbiraem-allokator-go-po-p|
 |Потребление оперативной памяти в  GO                                                 |        |https://www.youtube.com/watch?v=_BbhmaZupqs|
+|Дмитрий Вьюков Планировщик go||https://www.youtube.com/watch?v=-K11rY57K7k|
 |GopherCon UK 2018: Andre Carvalho - Understanding Go's Memory Allocator||https://www.youtube.com/watch?v=3CR4UNMK_Is|
 |The Golang Scheduler||https://www.kelche.co/blog/go/golang-scheduling/|
 |Теория отказоустойчивых систем|Курс|https://www.lektorium.tv/node/36432|
