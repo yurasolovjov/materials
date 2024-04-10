@@ -20,6 +20,7 @@
 |The Golang Scheduler||https://www.kelche.co/blog/go/golang-scheduling/|
 |Теория отказоустойчивых систем|Курс|https://www.lektorium.tv/node/36432|
 |Теория отказоустойчивых систем|Курс|https://www.youtube.com/playlist?list=PL4_hYwCyhAvYaxubHPI-qZDhqPckxxvK7|
+|YDB||https://habr.com/ru/companies/ydb/articles/783254/|
 
 
 
