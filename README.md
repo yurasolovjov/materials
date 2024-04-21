@@ -22,6 +22,7 @@
 |Теория отказоустойчивых систем|Курс|https://www.youtube.com/playlist?list=PL4_hYwCyhAvYaxubHPI-qZDhqPckxxvK7|
 |YDB||https://habr.com/ru/companies/ydb/articles/783254/|
 |awesome-concurrency|материал из курса теория и практика многопоточной синхронизации|https://gitlab.com/Lipovsky/awesome-concurrency|
+|Паттерны отказойстойчивой архитектуры|доклад|https://www.youtube.com/watch?v=YlXJMCdssAI|
 
 
 
