@@ -23,6 +23,7 @@
 |YDB||https://habr.com/ru/companies/ydb/articles/783254/|
 |awesome-concurrency|материал из курса теория и практика многопоточной синхронизации|https://gitlab.com/Lipovsky/awesome-concurrency|
 |Паттерны отказойстойчивой архитектуры|доклад|https://www.youtube.com/watch?v=YlXJMCdssAI|
+|Go allocator (доклад о работе аллокатора)|доклад|https://www.youtube.com/watch?v=wJtgOTmePp0|
 
 
 
