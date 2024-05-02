@@ -26,5 +26,6 @@
 |Go allocator (доклад о работе аллокатора)|доклад|https://www.youtube.com/watch?v=wJtgOTmePp0|
 |Coroutines c++||https://blog.panicsoftware.com/co_awaiting-coroutines/|
 |What Color is Your Function?| статья об асинхронности|https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/|
+|Google spanner||https://storage.googleapis.com/pub-tools-public-publication-data/pdf/45855.pdf|
 
 
