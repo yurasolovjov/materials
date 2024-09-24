@@ -9,7 +9,8 @@
 |Описание работы планировщика go||https://github.com/golang/go/blob/master/src/runtime/HACKING.md|
 | Планировщик ОС                                  | Статья |https://www.geeksforgeeks.org/cpu-scheduling-in-operating-systems/|
 | CPU-лимиты и агрессивный троттлинг в Kubernetes | Статья |https://habr.com/ru/companies/flant/articles/489668/|
-| Описание TLS                                    | Статья |https://tls12.xargs.org/|
+| Описание TLS  1.2                                  | Статья |https://tls12.xargs.org/|
+| Описание TLS  1.3                                  | Статья |https://tls13.xargs.org/|
 | Описание TLS                                    |        |https://pro-ldap.ru/tr/zytrax/tech/ssl.html|
 | NMAP                                            |        |https://nmap.org/man/ru/man-host-discovery.html|
 |Устройство каналов в GO                                                 |        |https://www.youtube.com/watch?v=8NhcDt1BCmc|
