@@ -13,6 +13,7 @@
 | Описание TLS  1.3                                  | Статья |https://tls13.xargs.org/|
 | Описание TLS                                    |        |https://pro-ldap.ru/tr/zytrax/tech/ssl.html|
 | NMAP                                            |        |https://nmap.org/man/ru/man-host-discovery.html|
+|Статья про ELF формат||https://habr.com/ru/articles/480642/|
 |Устройство каналов в GO                                                 |        |https://www.youtube.com/watch?v=8NhcDt1BCmc|
 |Разбираем аллокатор GO по полочкам                                                 |        |https://avito.tech/tpost/r4n35s1v61-go-to-memory-razbiraem-allokator-go-po-p|
 |Потребление оперативной памяти в  GO                                                 |        |https://www.youtube.com/watch?v=_BbhmaZupqs|
