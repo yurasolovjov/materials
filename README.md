@@ -14,6 +14,7 @@
 | Описание TLS                                    |        |https://pro-ldap.ru/tr/zytrax/tech/ssl.html|
 | NMAP                                            |        |https://nmap.org/man/ru/man-host-discovery.html|
 |Статья про ELF формат||https://habr.com/ru/articles/480642/|
+|ELF ||https://intezer.com/blog/malware-analysis/elf-malware-analysis-101-linux-threats-no-longer-an-afterthought/|
 |Устройство каналов в GO                                                 |        |https://www.youtube.com/watch?v=8NhcDt1BCmc|
 |Разбираем аллокатор GO по полочкам                                                 |        |https://avito.tech/tpost/r4n35s1v61-go-to-memory-razbiraem-allokator-go-po-p|
 |Потребление оперативной памяти в  GO                                                 |        |https://www.youtube.com/watch?v=_BbhmaZupqs|
