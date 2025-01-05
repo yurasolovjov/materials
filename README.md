@@ -21,6 +21,7 @@
 |Дмитрий Вьюков Планировщик go||https://www.youtube.com/watch?v=-K11rY57K7k|
 |Планировщик GO|статья|https://habr.com/ru/companies/first/articles/582144/|
 |GopherCon UK 2018: Andre Carvalho - Understanding Go's Memory Allocator||https://www.youtube.com/watch?v=3CR4UNMK_Is|
+|Visualizing memory management in Golang|Статья|https://dev.to/deepu105/visualizing-memory-management-in-golang-1apa|
 |The Golang Scheduler||https://www.kelche.co/blog/go/golang-scheduling/|
 |Теория отказоустойчивых систем|Курс|https://www.lektorium.tv/node/36432|
 |Теория отказоустойчивых систем|Курс|https://www.youtube.com/playlist?list=PL4_hYwCyhAvYaxubHPI-qZDhqPckxxvK7|
