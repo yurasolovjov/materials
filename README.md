@@ -25,7 +25,7 @@
 |Visualizing memory management in Golang|Статья|https://dev.to/deepu105/visualizing-memory-management-in-golang-1apa|
 |The Golang Scheduler||https://www.kelche.co/blog/go/golang-scheduling/|
 |Теория отказоустойчивых систем|Курс|https://www.lektorium.tv/node/36432|
-|Теория отказоустойчивых систем|Курс|https://www.youtube.com/playlist?list=PL4_hYwCyhAvYaxubHPI-qZDhqPckxxvK7|
+|Теория отказоустойчивых систем|Курс|https://www.youtube.com/playlist?list=PL4_hYwCyhAvaYKF6HkyCximCvlExxxnrC|
 |YDB||https://habr.com/ru/companies/ydb/articles/783254/|
 |awesome-concurrency|материал из курса теория и практика многопоточной синхронизации|https://gitlab.com/Lipovsky/awesome-concurrency|
 |Паттерны отказойстойчивой архитектуры|доклад|https://www.youtube.com/watch?v=YlXJMCdssAI|
