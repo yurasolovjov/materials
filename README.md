@@ -35,6 +35,7 @@
 |Google spanner||https://storage.googleapis.com/pub-tools-public-publication-data/pdf/45855.pdf|
 |Статья на курс микропроцессоров||https://engineer.yadro.com/article/microprocessor-development-courses/|
 |Полезный сайт||https://goxpert.ru/2024/06/01/os/ebpf_network/|
+|MCP Server Claude||https://modelcontextprotocol.io/quickstart/server|
 
 
 
