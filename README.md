@@ -37,6 +37,7 @@
 |Полезный сайт||https://goxpert.ru/2024/06/01/os/ebpf_network/|
 |MCP Server Claude||https://modelcontextprotocol.io/quickstart/server|
 |Описание работы go get||https://github.com/yurasolovjov/materials/blob/main/go-get-goproxy.md|
+|OpenAI Cookbook||https://cookbook.openai.com/|
 
 
 
