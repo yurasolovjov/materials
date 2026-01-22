@@ -1,0 +1,784 @@
+╔════════════════════════════════════════════════════════════════╗
+║                   ШПАРГАЛКА: IPTABLES                          ║
+╚════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════
+ОСНОВНЫЕ КОНЦЕПЦИИ
+═══════════════════════════════════════════════════════════════
+
+ТАБЛИЦЫ (tables):
+┌──────────┬─────────────────────────────────────────────────┐
+│ filter   │ Фильтрация (по умолчанию)                      │
+│ nat      │ NAT (изменение адресов)                        │
+│ mangle   │ Модификация пакетов                            │
+│ raw      │ До conntrack                                    │
+└──────────┴─────────────────────────────────────────────────┘
+
+ЦЕПОЧКИ (chains):
+┌─────────────┬────────────────────────────────────────────┐
+│ INPUT       │ Входящие пакеты (к этому хосту)          │
+│ OUTPUT      │ Исходящие пакеты (от этого хоста)        │
+│ FORWARD     │ Транзитные пакеты (через этот хост)      │
+│ PREROUTING  │ Перед маршрутизацией                      │
+│ POSTROUTING │ После маршрутизации                       │
+└─────────────┴────────────────────────────────────────────┘
+
+ДЕЙСТВИЯ (targets):
+ACCEPT      - Разрешить
+DROP        - Отбросить молча
+REJECT      - Отбросить с ответом
+MASQUERADE  - NAT с динамическим IP
+SNAT        - NAT с фиксированным IP
+DNAT        - Изменить destination
+LOG         - Залогировать
+MARK        - Пометить пакет
+
+
+═══════════════════════════════════════════════════════════════
+ПРОСМОТР ПРАВИЛ
+═══════════════════════════════════════════════════════════════
+
+# Все правила (filter)
+iptables -L -v -n
+
+# С номерами строк
+iptables -L -v -n --line-numbers
+
+# NAT таблица
+iptables -t nat -L -v -n
+
+# Mangle таблица
+iptables -t mangle -L -v -n
+
+# Конкретная цепочка
+iptables -L INPUT -v -n
+iptables -L FORWARD -v -n
+iptables -t nat -L POSTROUTING -v -n
+
+# Экспорт всех правил
+iptables-save
+
+# Экспорт в файл
+iptables-save > /tmp/iptables.txt
+
+
+═══════════════════════════════════════════════════════════════
+ДОБАВЛЕНИЕ ПРАВИЛ
+═══════════════════════════════════════════════════════════════
+
+Синтаксис:
+iptables [-t таблица] -A цепочка условия -j действие
+
+# Разрешить SSH (порт 22)
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+# Разрешить HTTP/HTTPS
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+# Разрешить несколько портов сразу
+iptables -A INPUT -p tcp -m multiport --dports 80,443 -j ACCEPT
+
+# Разрешить с конкретного IP
+iptables -A INPUT -s 192.168.1.50 -j ACCEPT
+
+# Разрешить из подсети
+iptables -A INPUT -s 192.168.1.0/24 -j ACCEPT
+
+# Разрешить на конкретном интерфейсе
+iptables -A INPUT -i eth0 -p tcp --dport 22 -j ACCEPT
+
+# Разрешить установленные соединения
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Разрешить loopback
+iptables -A INPUT -i lo -j ACCEPT
+
+# Блокировать IP
+iptables -A INPUT -s 1.2.3.4 -j DROP
+
+# Блокировать с логированием
+iptables -A INPUT -s 1.2.3.4 -j LOG --log-prefix "BLOCK: "
+iptables -A INPUT -s 1.2.3.4 -j DROP
+
+# Ограничение скорости (rate limiting)
+iptables -A INPUT -p tcp --dport 22 -m limit --limit 3/min -j ACCEPT
+
+# Блокировать ping
+iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+
+
+═══════════════════════════════════════════════════════════════
+ВСТАВКА И ЗАМЕНА ПРАВИЛ
+═══════════════════════════════════════════════════════════════
+
+# Вставить в начало (позиция 1)
+iptables -I INPUT 1 -s 192.168.1.50 -j ACCEPT
+
+# Вставить на позицию 3
+iptables -I INPUT 3 -p tcp --dport 80 -j ACCEPT
+
+# Заменить правило 2
+iptables -R INPUT 2 -p tcp --dport 8080 -j ACCEPT
+
+
+═══════════════════════════════════════════════════════════════
+УДАЛЕНИЕ ПРАВИЛ
+═══════════════════════════════════════════════════════════════
+
+# По номеру строки
+iptables -D INPUT 3
+
+# По содержимому (точное совпадение)
+iptables -D INPUT -s 192.168.1.50 -j ACCEPT
+
+# Удалить все из цепочки
+iptables -F INPUT
+
+# Удалить все из всех цепочек
+iptables -F
+
+# Удалить все из NAT
+iptables -t nat -F
+
+# Удалить пользовательские цепочки
+iptables -X
+
+
+═══════════════════════════════════════════════════════════════
+ПОЛИТИКИ ПО УМОЛЧАНИЮ
+═══════════════════════════════════════════════════════════════
+
+# Установить policy ACCEPT
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -P OUTPUT ACCEPT
+
+# Установить policy DROP (строгий firewall)
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+
+═══════════════════════════════════════════════════════════════
+NAT И МАРШРУТИЗАЦИЯ
+═══════════════════════════════════════════════════════════════
+
+# MASQUERADE (для роутера с динамическим IP)
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+# SNAT (для роутера с фиксированным IP)
+iptables -t nat -A POSTROUTING -o eth0 -j SNAT --to-source 1.2.3.4
+
+# DNAT (port forwarding)
+iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to-destination 192.168.1.10:80
+
+# Redirect (перенаправить на другой порт)
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+
+# NAT для конкретной подсети
+iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o eth0 -j MASQUERADE
+
+
+═══════════════════════════════════════════════════════════════
+FORWARD (ДЛЯ РОУТЕРА)
+═══════════════════════════════════════════════════════════════
+
+# Разрешить forwarding из LAN в WAN
+iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
+
+# Разрешить обратный трафик
+iptables -A FORWARD -i eth0 -o eth1 -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Блокировать форвардинг с конкретного IP
+iptables -A FORWARD -s 192.168.1.50 -j DROP
+
+# Ограничить скорость forwarding
+iptables -A FORWARD -m limit --limit 100/s -j ACCEPT
+iptables -A FORWARD -j DROP
+
+
+═══════════════════════════════════════════════════════════════
+MANGLE (МАРКИРОВКА ПАКЕТОВ)
+═══════════════════════════════════════════════════════════════
+
+# Пометить пакеты
+iptables -t mangle -A PREROUTING -i eth0 -j MARK --set-mark 100
+
+# Пометить по IP
+iptables -t mangle -A PREROUTING -s 192.168.1.50 -j MARK --set-mark 100
+
+# Пометить по порту
+iptables -t mangle -A PREROUTING -p tcp --dport 80 -j MARK --set-mark 100
+
+# Используется с ip rule для Policy-Based Routing
+
+
+═══════════════════════════════════════════════════════════════
+ЛОГИРОВАНИЕ
+═══════════════════════════════════════════════════════════════
+
+# Логировать перед DROP
+iptables -A INPUT -m limit --limit 5/min -j LOG --log-prefix "DROP-INPUT: " --log-level 4
+iptables -A INPUT -j DROP
+
+# Логировать новые соединения
+iptables -A INPUT -m state --state NEW -j LOG --log-prefix "NEW-CONN: "
+
+# Просмотр логов
+tail -f /var/log/kern.log | grep "DROP-INPUT"
+
+
+═══════════════════════════════════════════════════════════════
+СБРОС СЧЁТЧИКОВ
+═══════════════════════════════════════════════════════════════
+
+# Сбросить все счётчики
+iptables -Z
+
+# Сбросить в конкретной цепочке
+iptables -Z INPUT
+
+# Сбросить конкретное правило
+iptables -Z INPUT 3
+
+
+═══════════════════════════════════════════════════════════════
+СОХРАНЕНИЕ И ВОССТАНОВЛЕНИЕ
+═══════════════════════════════════════════════════════════════
+
+# Сохранить
+iptables-save > /etc/iptables/rules.v4
+
+# Восстановить
+iptables-restore < /etc/iptables/rules.v4
+
+# Через netfilter-persistent (Debian/Ubuntu)
+apt install iptables-persistent
+netfilter-persistent save
+netfilter-persistent reload
+
+
+═══════════════════════════════════════════════════════════════
+ТИПИЧНЫЕ КОНФИГУРАЦИИ
+═══════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────┐
+│ БАЗОВЫЙ FIREWALL                                           │
+└────────────────────────────────────────────────────────────┘
+
+# Очистить
+iptables -F
+
+# Разрешить loopback
+iptables -A INPUT -i lo -j ACCEPT
+
+# Разрешить установленные соединения
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Разрешить SSH
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+# Разрешить HTTP/HTTPS
+iptables -A INPUT -p tcp -m multiport --dports 80,443 -j ACCEPT
+
+# Блокировать всё остальное
+iptables -P INPUT DROP
+
+
+┌────────────────────────────────────────────────────────────┐
+│ LINUX РОУТЕР                                               │
+└────────────────────────────────────────────────────────────┘
+
+# Включить forwarding
+sysctl -w net.ipv4.ip_forward=1
+
+# NAT
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+# FORWARD
+iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
+iptables -A FORWARD -i eth0 -o eth1 -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+
+┌────────────────────────────────────────────────────────────┐
+│ PORT FORWARDING                                            │
+└────────────────────────────────────────────────────────────┘
+
+# Проброс порта 8080 на внутренний сервер
+iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to-destination 192.168.1.10:80
+iptables -A FORWARD -p tcp -d 192.168.1.10 --dport 80 -j ACCEPT
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                   ШПАРГАЛКА: IP ROUTE                          ║
+╚════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════
+ОСНОВНЫЕ КОНЦЕПЦИИ
+═══════════════════════════════════════════════════════════════
+
+ТАБЛИЦЫ МАРШРУТИЗАЦИИ:
+┌──────────┬─────────────────────────────────────────────────┐
+│ 0/unspec │ Специальная                                    │
+│ 254/main │ Основная (по умолчанию)                        │
+│ 253/default │ Пустая                                      │
+│ 255/local│ Локальные адреса                               │
+│ 1-252    │ Пользовательские                               │
+└──────────┴─────────────────────────────────────────────────┘
+
+ТИПЫ МАРШРУТОВ:
+unicast    - Обычный маршрут
+local      - Локальный адрес
+broadcast  - Broadcast адрес
+blackhole  - Отбросить молча
+unreachable - ICMP unreachable
+prohibit   - ICMP prohibited
+
+
+═══════════════════════════════════════════════════════════════
+ПРОСМОТР МАРШРУТОВ
+═══════════════════════════════════════════════════════════════
+
+# Все маршруты (main таблица)
+ip route show
+ip route list
+
+# Кратко
+ip -br route
+
+# В конкретной таблице
+ip route show table 100
+ip route show table all
+
+# Default route
+ip route show default
+
+# Маршруты через интерфейс
+ip route show dev eth0
+
+# Маршруты к конкретной сети
+ip route show 10.0.0.0/8
+
+# Маршрут к конкретному IP
+ip route get 8.8.8.8
+
+# С source IP
+ip route get 8.8.8.8 from 192.168.1.100
+
+# Таблицы маршрутизации
+cat /etc/iproute2/rt_tables
+
+
+═══════════════════════════════════════════════════════════════
+ДОБАВЛЕНИЕ МАРШРУТОВ
+═══════════════════════════════════════════════════════════════
+
+Синтаксис:
+ip route add <destination> via <gateway> dev <interface>
+
+# К сети через gateway
+ip route add 10.0.0.0/24 via 192.168.1.1
+
+# С указанием интерфейса
+ip route add 10.0.0.0/24 via 192.168.1.1 dev eth0
+
+# Прямо подключенная сеть (без gateway)
+ip route add 192.168.2.0/24 dev eth1
+
+# Host route (к одному IP)
+ip route add 8.8.8.8 via 192.168.1.1
+
+# Default route (маршрут по умолчанию)
+ip route add default via 192.168.1.1
+ip route add 0.0.0.0/0 via 192.168.1.1
+
+# С метрикой (приоритет)
+ip route add 10.0.0.0/24 via 192.168.1.1 metric 100
+
+# С source IP
+ip route add 10.0.0.0/24 via 192.168.1.1 src 192.168.1.100
+
+# Blackhole (отбросить)
+ip route add blackhole 192.168.100.0/24
+
+# Unreachable (ICMP unreachable)
+ip route add unreachable 192.168.100.0/24
+
+# Prohibit (ICMP prohibited)
+ip route add prohibit 192.168.100.0/24
+
+
+═══════════════════════════════════════════════════════════════
+УДАЛЕНИЕ МАРШРУТОВ
+═══════════════════════════════════════════════════════════════
+
+# Удалить маршрут
+ip route del 10.0.0.0/24
+
+# С gateway
+ip route del 10.0.0.0/24 via 192.168.1.1
+
+# Default route
+ip route del default
+ip route del default via 192.168.1.1
+
+# Из конкретной таблицы
+ip route del 10.0.0.0/24 table 100
+
+# Очистить интерфейс
+ip route flush dev eth0
+
+# Очистить таблицу
+ip route flush table 100
+
+# Очистить кеш
+ip route flush cache
+
+
+═══════════════════════════════════════════════════════════════
+ИЗМЕНЕНИЕ МАРШРУТОВ
+═══════════════════════════════════════════════════════════════
+
+# Изменить существующий
+ip route change 10.0.0.0/24 via 192.168.1.2
+
+# Заменить (удалить старый + добавить новый)
+ip route replace 10.0.0.0/24 via 192.168.1.2
+
+# Добавить или заменить
+ip route add 10.0.0.0/24 via 192.168.1.1 || \
+ip route replace 10.0.0.0/24 via 192.168.1.1
+
+
+═══════════════════════════════════════════════════════════════
+РАБОТА С ТАБЛИЦАМИ МАРШРУТИЗАЦИИ
+═══════════════════════════════════════════════════════════════
+
+# Посмотреть доступные таблицы
+cat /etc/iproute2/rt_tables
+
+0       unspec
+255     local
+254     main
+253     default
+
+# Создать новую таблицу
+echo "100 vpn" >> /etc/iproute2/rt_tables
+echo "200 backup" >> /etc/iproute2/rt_tables
+
+# Добавить маршрут в таблицу
+ip route add default via 10.8.0.1 table 100
+ip route add 10.0.0.0/8 via 10.8.0.1 table 100
+
+# Посмотреть таблицу
+ip route show table 100
+
+# Очистить таблицу
+ip route flush table 100
+
+
+═══════════════════════════════════════════════════════════════
+POLICY-BASED ROUTING (ПРАВИЛА МАРШРУТИЗАЦИИ)
+═══════════════════════════════════════════════════════════════
+
+# Посмотреть правила
+ip rule show
+ip rule list
+
+0:      from all lookup local
+32766:  from all lookup main
+32767:  from all lookup default
+
+# Добавить правило: от конкретного IP → таблица
+ip rule add from 192.168.1.50 table 100 priority 100
+
+# К конкретному IP → таблица
+ip rule add to 10.0.0.0/8 table 100 priority 100
+
+# По fwmark (от iptables)
+ip rule add fwmark 100 table 100 priority 100
+
+# По входящему интерфейсу
+ip rule add iif eth1 table 100 priority 100
+
+# По исходящему интерфейсу
+ip rule add oif eth0 table 100 priority 100
+
+# Комбинированное
+ip rule add from 192.168.1.0/24 to 10.0.0.0/8 table 100 priority 100
+
+# Удалить правило
+ip rule del from 192.168.1.50 table 100
+ip rule del fwmark 100 table 100
+ip rule del priority 100
+
+
+═══════════════════════════════════════════════════════════════
+MULTIPATH ROUTING (БАЛАНСИРОВКА)
+═══════════════════════════════════════════════════════════════
+
+# Балансировка между двумя gateway (вес 1:1)
+ip route add default \
+    nexthop via 192.168.1.1 weight 1 \
+    nexthop via 192.168.2.1 weight 1
+
+# С разными весами (2:1)
+ip route add default \
+    nexthop via 192.168.1.1 weight 2 dev eth0 \
+    nexthop via 192.168.2.1 weight 1 dev eth1
+
+# К конкретной сети
+ip route add 10.0.0.0/8 \
+    nexthop via 192.168.1.1 dev eth0 \
+    nexthop via 10.0.0.1 dev eth1
+
+
+═══════════════════════════════════════════════════════════════
+ТИПИЧНЫЕ СЦЕНАРИИ
+═══════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────┐
+│ БАЗОВАЯ НАСТРОЙКА СЕТИ                                     │
+└────────────────────────────────────────────────────────────┘
+
+# Назначить IP
+ip addr add 192.168.1.100/24 dev eth0
+
+# Включить интерфейс
+ip link set eth0 up
+
+# Добавить default gateway
+ip route add default via 192.168.1.1
+
+# Проверить
+ip route get 8.8.8.8
+
+
+┌────────────────────────────────────────────────────────────┐
+│ НЕСКОЛЬКО DEFAULT ROUTES (FAILOVER)                       │
+└────────────────────────────────────────────────────────────┘
+
+# Основной (метрика 100)
+ip route add default via 192.168.1.1 metric 100
+
+# Резервный (метрика 200)
+ip route add default via 192.168.2.1 metric 200
+
+# При падении основного автоматически используется резервный
+
+
+┌────────────────────────────────────────────────────────────┐
+│ VPN SPLIT TUNNELING                                        │
+└────────────────────────────────────────────────────────────┘
+
+# Корпоративные сети через VPN
+ip route add 10.0.0.0/8 via 10.8.0.1 dev tun0
+ip route add 172.16.0.0/12 via 10.8.0.1 dev tun0
+
+# Всё остальное напрямую
+ip route add default via 192.168.1.1 dev eth0 metric 100
+
+
+┌────────────────────────────────────────────────────────────┐
+│ POLICY ROUTING: ТРАФИК ОТ РАЗНЫХ КЛИЕНТОВ → РАЗНЫЕ GATEWAY│
+└────────────────────────────────────────────────────────────┘
+
+# Создать таблицы
+echo "100 isp1" >> /etc/iproute2/rt_tables
+echo "200 isp2" >> /etc/iproute2/rt_tables
+
+# Маршруты в таблицах
+ip route add default via 192.168.1.1 table 100
+ip route add default via 192.168.2.1 table 200
+
+# Правила: какой клиент → какая таблица
+ip rule add from 192.168.10.0/24 table 100 priority 100
+ip rule add from 192.168.20.0/24 table 200 priority 200
+
+
+┌────────────────────────────────────────────────────────────┐
+│ POLICY ROUTING С IPTABLES MARK                            │
+└────────────────────────────────────────────────────────────┘
+
+# Создать таблицу
+echo "100 vpn" >> /etc/iproute2/rt_tables
+ip route add default via 10.8.0.1 table 100
+
+# Пометить пакеты в iptables
+iptables -t mangle -A PREROUTING -i wlan0 -j MARK --set-mark 100
+
+# Правило: пакеты с mark 100 → таблица 100
+ip rule add fwmark 100 table 100 priority 100
+
+
+┌────────────────────────────────────────────────────────────┐
+│ ПОЛНАЯ НАСТРОЙКА LINUX РОУТЕРА                            │
+└────────────────────────────────────────────────────────────┘
+
+# На роутере:
+# 1. IP forwarding
+sysctl -w net.ipv4.ip_forward=1
+
+# 2. NAT
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+# 3. FORWARD
+iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
+iptables -A FORWARD -i eth0 -o eth1 -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# На клиенте:
+# 1. Default route к роутеру
+ip route add default via 192.168.1.1
+
+
+═══════════════════════════════════════════════════════════════
+ДОПОЛНИТЕЛЬНЫЕ ПАРАМЕТРЫ
+═══════════════════════════════════════════════════════════════
+
+# MTU
+ip route add 10.0.0.0/24 via 192.168.1.1 mtu 1400
+
+# TTL
+ip route add 10.0.0.0/24 via 192.168.1.1 ttl 64
+
+# Window (TCP window)
+ip route add 10.0.0.0/24 via 192.168.1.1 window 1024
+
+# RTT (Round Trip Time)
+ip route add 10.0.0.0/24 via 192.168.1.1 rtt 100ms
+
+# Scope
+ip route add 192.168.1.0/24 dev eth0 scope link
+ip route add 10.0.0.0/24 via 192.168.1.1 scope global
+
+# Protocol
+ip route add 10.0.0.0/24 via 192.168.1.1 proto static
+
+
+═══════════════════════════════════════════════════════════════
+ОТЛАДКА И ДИАГНОСТИКА
+═══════════════════════════════════════════════════════════════
+
+# Трассировка маршрута
+ip route get 8.8.8.8
+
+# С source
+ip route get 8.8.8.8 from 192.168.1.100
+
+# С конкретного интерфейса
+ip route get 8.8.8.8 iif eth1
+
+# Подробная информация
+ip -d route show
+
+# С метриками
+ip -s route show
+
+# Статистика использования маршрутов
+ip -s -s route show
+
+
+═══════════════════════════════════════════════════════════════
+КОМБИНАЦИЯ IPTABLES + IP ROUTE
+═══════════════════════════════════════════════════════════════
+
+Пример: Wi-Fi клиенты → VPN, проводные → прямо
+
+# 1. Создать таблицу для VPN
+echo "100 vpn" >> /etc/iproute2/rt_tables
+ip route add default via 10.8.0.1 table 100
+
+# 2. Пометить Wi-Fi трафик
+iptables -t mangle -A PREROUTING -i wlan0 -j MARK --set-mark 100
+
+# 3. Правило маршрутизации
+ip rule add fwmark 100 table 100 priority 100
+
+# 4. Основной маршрут остаётся для проводных
+ip route add default via 192.168.1.1
+
+
+═══════════════════════════════════════════════════════════════
+СОХРАНЕНИЕ НАСТРОЕК
+═══════════════════════════════════════════════════════════════
+
+# iptables
+iptables-save > /etc/iptables/rules.v4
+netfilter-persistent save
+
+# ip route (добавить в автозагрузку)
+
+# Debian/Ubuntu - /etc/network/interfaces
+auto eth0
+iface eth0 inet static
+    address 192.168.1.100/24
+    up ip route add 10.0.0.0/24 via 192.168.1.1
+
+# Ubuntu - Netplan
+network:
+  ethernets:
+    eth0:
+      routes:
+        - to: 10.0.0.0/24
+          via: 192.168.1.1
+
+# systemd-networkd
+[Route]
+Destination=10.0.0.0/24
+Gateway=192.168.1.1
+
+
+═══════════════════════════════════════════════════════════════
+ПОЛЕЗНЫЕ КОМАНДЫ
+═══════════════════════════════════════════════════════════════
+
+# Мониторинг
+watch -n1 'ip route show'
+watch -n1 'iptables -L -v -n'
+
+# Проверка связи
+ping 8.8.8.8
+traceroute 8.8.8.8
+mtr 8.8.8.8
+
+# Проверка маршрута
+ip route get 8.8.8.8
+
+# Проверка forwarding
+cat /proc/sys/net/ipv4/ip_forward
+
+# Включить forwarding
+sysctl -w net.ipv4.ip_forward=1
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+
+═══════════════════════════════════════════════════════════════
+СПРАВОЧНАЯ ТАБЛИЦА
+═══════════════════════════════════════════════════════════════
+
+IPTABLES:
+┌───────────────────────────┬───────────────────────────────┐
+│ iptables -L -v -n         │ Посмотреть все правила        │
+│ iptables -A INPUT ...     │ Добавить правило              │
+│ iptables -I INPUT 1 ...   │ Вставить в начало             │
+│ iptables -D INPUT 3       │ Удалить правило №3            │
+│ iptables -F               │ Очистить все                  │
+│ iptables -P INPUT DROP    │ Установить policy             │
+│ iptables-save             │ Экспорт                       │
+│ iptables-restore          │ Импорт                        │
+└───────────────────────────┴───────────────────────────────┘
+
+IP ROUTE:
+┌───────────────────────────┬───────────────────────────────┐
+│ ip route show             │ Посмотреть маршруты           │
+│ ip route add ... via ...  │ Добавить маршрут              │
+│ ip route del ...          │ Удалить маршрут               │
+│ ip route get 8.8.8.8      │ Проверить маршрут             │
+│ ip rule show              │ Правила маршрутизации         │
+│ ip rule add from ... table│ Добавить правило              │
+└───────────────────────────┴───────────────────────────────┘
