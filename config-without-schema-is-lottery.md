@@ -181,9 +181,21 @@ message ServerConfig {
 
 ## Минимальная спецификация на protobuf
 
-Самый простой способ показать, как работает подход, — посмотреть на готовый пример. Вот как может выглядеть спецификация секции HTTP-сервера, описанная в `.proto`-файле:
+Самый простой способ показать, как работает подход, — посмотреть на готовый пример. Вот как может выглядеть спецификация секции HTTP-сервера и подключения к базе данных, описанная в `.proto`-файле:
 
 ```proto
+syntax = "proto3";
+
+package myapp.config.v1;
+
+import "google/protobuf/descriptor.proto";
+import "google/protobuf/duration.proto";
+import "buf/validate/validate.proto";
+
+extend google.protobuf.FieldOptions {
+  string default_value = 50001;
+}
+
 message ServerConfig {
   string host = 1 [(default_value) = "0.0.0.0"];
 
@@ -208,17 +220,26 @@ message ServerConfig {
   ];
 
   bool tls_enabled = 6 [(default_value) = "false"];
+
+  string dsn = 7 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).cel = {
+      expression: "this.startsWith('postgres://')",
+      message: "dsn must be a postgres URL"
+    }
+  ];
 }
 ```
 
 Прочитайте, не торопясь. Здесь:
 
-- **Структура** — message с шестью полями.
+- **Структура** — message с семью полями.
 - **Типы** — `string`, `uint32`, `Duration`, `bool`. Не «строка или число», а ровно эти типы.
 - **Дефолты** — каждое поле имеет разумное значение по умолчанию: bind на все интерфейсы, порт 8080, таймауты по 15 секунд, лимит заголовков 1 MiB, TLS выключен.
 - **Границы** — порт от 1 до 65535, таймауты от 1 секунды до 5 минут, размер заголовков от 1 KiB до 16 MiB.
+- **Форматы строк** — для DSN мало одной проверки на непустоту: CEL-выражение требует, чтобы значение начиналось с `postgres://`. Невалидный URL не пройдёт дальше старта сервиса.
 
-Это **полная** спецификация секции HTTP-сервера. Не комментарий в YAML, не строка в README, не хардкод в Go.
+Это **полная** спецификация секции HTTP-сервера и подключения к БД. Здесь нет рукописных комментариев в YAML, нет описаний в README и нет констант, спрятанных в коде, — всё описано в одном месте и одинаково доступно всем потребителям.
 
 Оператор пишет в `config.yaml`:
 
@@ -226,38 +247,23 @@ message ServerConfig {
 server:
   host: api.example.com
   read_timeout: 30s
+  dsn: postgres://localhost/myapp
 ```
 
-Остальные поля не указаны — применяются дефолты из спеки. Если оператор укажет `port: 70000` или `read_timeout: 600s`, валидатор ответит точным сообщением:
+Остальные поля не указаны — применяются дефолты из спецификации. Если оператор укажет `port: 70000` или `read_timeout: 600s`, валидатор ответит точным сообщением:
 
 ```
 server.port: value must be <= 65535
 server.read_timeout: value must be <= 300s
 ```
 
+А если в DSN окажется что-то некорректное — например, `mysql://...` или просто `localhost` — ошибка тоже будет понятной:
+
+```
+server.dsn: dsn must be a postgres URL
+```
+
 Не где-то в Go-коде в форме panic, а **сразу** при запуске сервиса, со ссылкой на конкретное поле и правило.
-
-### Добавим формат
-
-Расширяем — DSN базы данных. Не просто строка, а с проверкой формата:
-
-```proto
-string dsn = 1 [
-  (buf.validate.field).string.min_len = 1,
-  (buf.validate.field).cel = {
-    expression: "this.startsWith('postgres://')"
-    message: "dsn must be a postgres URL"
-  }
-];
-```
-
-Ошибка валидации звучит человеческим языком:
-
-```
-database.dsn: dsn must be a postgres URL
-```
-
-В обычном Go-коде такая проверка была бы `if !strings.HasPrefix(...) { return errors.New(...) }` где-то на 200-й строке `validate.go`, и оператор её бы никогда не нашёл.
 
 ## Спецификация живёт отдельно от сервиса
 
